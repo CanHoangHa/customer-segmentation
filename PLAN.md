@@ -24,7 +24,7 @@ Tên nhóm và nhận xét kinh doanh chỉ được đặt sau khi xem kết qu
 - Nguồn nhà cung cấp: <https://data.rees46.com/>.
 - Dataset: <https://www.kaggle.com/datasets/mkechinov/ecommerce-purchase-history-from-electronics-store>.
 - Mục purchases của nhà cung cấp mô tả khoảng **2,5 triệu dòng mua hàng**, giai đoạn **04–11/2020**, file `purchases.csv.gz` khoảng 50 MB. Đây là thông tin công bố, chưa phải số liệu nhóm tự đo; không gọi 2,5 triệu dòng là 2,5 triệu đơn hàng.
-- Người 1 phải ghi tên file, phiên bản, URL tải, ngày tải, SHA-256, số dòng thực đọc, thời gian thực tế và điều kiện sử dụng/ghi nguồn. Không coi dữ liệu công khai là tự động có giấy phép phân phối lại.
+- Người 1 phải ghi tên file, phiên bản, URL tải, ngày tải, số dòng thực đọc, thời gian thực tế và điều kiện sử dụng/ghi nguồn. Không coi dữ liệu công khai là tự động có giấy phép phân phối lại.
 - Nếu bản Kaggle và bản trực tiếp có khác biệt về thời gian hoặc số dòng, ghi rõ phiên bản được chọn và dùng nhất quán cho cả hai phương pháp. Không ghép các bản khác nhau để tăng số dòng.
 - Phạm vi là các bản ghi mua hàng năm 2020 có thời gian hợp lệ, nằm trong khoảng quan sát đã xác minh. Không ép ngày đầu/cuối theo mô tả nếu chưa kiểm tra dữ liệu.
 
