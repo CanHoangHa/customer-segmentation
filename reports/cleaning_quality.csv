@@ -1,0 +1,17 @@
+﻿stage,column,rows,missing_count,missing_pct
+before_validation,event_time,2633521,0,0.0
+before_validation,order_id,2633521,0,0.0
+before_validation,product_id,2633521,0,0.0
+before_validation,category_id,2633521,431954,16.4021
+before_validation,category_code,2633521,1044156,39.6487
+before_validation,brand,2633521,544624,20.6805
+before_validation,price,2633521,0,0.0
+before_validation,user_id,2633521,2030733,77.1109
+after_validation,event_time,600784,0,0.0
+after_validation,order_id,600784,0,0.0
+after_validation,product_id,600784,0,0.0
+after_validation,category_id,600784,37961,6.3186
+after_validation,category_code,600784,166859,27.7735
+after_validation,brand,600784,65115,10.8383
+after_validation,price,600784,0,0.0
+after_validation,customer_id,600784,0,0.0
