@@ -14,6 +14,9 @@ $env:JAVA_HOME = "C:\Program Files\Java\jdk-17"
 
 ## Làm sạch
 
+Chạy toàn bộ phần người 1 bằng `python scripts/run_pipeline.py`, hoặc chạy từng bước dưới đây.
+Notebook `notebooks/cleaning_rfm.ipynb` trình bày cùng các bước và hiển thị kết quả.
+
 ```powershell
 python scripts/prepare_data.py
 ```

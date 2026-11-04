@@ -180,7 +180,7 @@ Người 1 và người 2 thống nhất schema bàn giao trước khi triển k
 ## 8. Làm việc trên GitHub
 
 - `main`: bản ổn định; `dev`: tích hợp công việc của nhóm.
-- Nhánh đề xuất: `feature/data-rfm`, `feature/segmentation`, `feature/dashboard`.
+- Nhánh đề xuất: `feat/data-rfm`, `feat/segmentation`, `feat/dashboard`.
 - Mỗi người mở PR vào `dev`, ghi rõ thay đổi, cách chạy và bằng chứng kiểm chứng. Một người khác review trước khi merge.
 - Thống nhất sớm tên cột và kiểu dữ liệu; thay đổi schema cần cập nhật đồng thời bên tạo và bên dùng.
 - Không commit raw/processed data dung lượng lớn, môi trường ảo, cache Spark hoặc thông tin đăng nhập. Bước triển khai phải thêm `.gitignore` thích hợp.
@@ -198,7 +198,7 @@ Người 1 và người 2 thống nhất schema bàn giao trước khi triển k
 - [ ] Dashboard nhất quán với dữ liệu, có bộ lọc và ít nhất 3 nhận xét dựa trên số liệu.
 - [ ] Có đề xuất CRM, rủi ro, giới hạn dữ liệu và điều kiện áp dụng.
 - [ ] Có README, mã nguồn, kiểm thử, báo cáo, slide/demo và phân công đóng góp.
-- [ ] Cả 3 người hiểu cách tính KPI và giải thích được phần mình thực hiện.
+- [ ] Cả 3 người hiểu cách tính KPI và giải thích được phần phụ trách.
 
 Quy mô và hiệu năng phải được báo cáo trung thực. Số dòng lớn hơn một triệu không tự chứng minh hệ thống phân tán cần thiết. Nếu bổ sung dữ liệu tăng tải mô phỏng, tách khỏi kết quả kinh doanh trên dữ liệu thật và ghi rõ cách tạo.
 

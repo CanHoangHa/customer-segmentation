@@ -21,18 +21,23 @@ không sửa file gốc và chưa xuất dữ liệu sạch.
 - `docs/data_source.md`: nguồn và kiểm tra file tải.
 - `docs/data_rules.md`: phạm vi, quy tắc và KPI.
 - `reports/data_audit.md`: kết luận khảo sát ngắn.
-- `docs/pipeline.md`: cách chạy phần làm sạch và đọc các đầu ra.
+- `docs/pipeline.md`: cách chạy làm sạch, RFM và đọc các đầu ra.
+- `docs/person1_handoff.md`: kết quả, schema và lưu ý cho người 2–3.
 
-## Làm sạch dữ liệu
+## Làm sạch và tính RFM
 
 ```powershell
 python -m pip install -r requirements.txt
 $env:JAVA_HOME = "C:\Program Files\Java\jdk-17"
-python scripts/prepare_data.py
+python scripts/run_pipeline.py
 ```
 
 Pipeline lưu Parquet trong `data/processed/`, các dòng bị tách trong `data/quarantine/`
 và thống kê trước–sau trong `reports/`.
+Mở `notebooks/cleaning_rfm.ipynb` để xem và chạy từng bước.
+Notebook này cũng tạo lại các đầu ra, nên chỉ cần chọn script hoặc notebook cho mỗi lần chạy.
+
+Có 3 bài kiểm tra ngắn: `python -m pytest -q`.
 
 Chú ý: file nguồn có cả dòng 8 trường và dòng 6 trường. Mục 2 của notebook hiển thị mẫu thật,
 kiểm tra điều kiện và ví dụ trước–sau khi sửa vị trí cột. Không dùng riêng kết quả pandas đọc mặc định
