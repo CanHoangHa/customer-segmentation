@@ -42,6 +42,23 @@ PySpark thực hiện kiểm tra và tổng hợp. PyArrow ghi Parquet theo từ
 và chạy trên Windows mà không cần cài thêm thư viện Hadoop native.
 Chạy lại sẽ thay các file đầu ra của pipeline, không nối thêm dữ liệu.
 
+## Tính RFM
+
+```powershell
+python scripts/build_rfm.py
+python scripts/check_rfm.py
+```
+
+RFM có một dòng cho mỗi khách: R là số ngày từ lần mua cuối đến ngày chốt,
+F là số đơn riêng biệt, M là tổng giá trên các dòng mua hợp lệ.
+Ngày chốt được lưu trong `reports/rfm_summary.json`.
+
+- `data/processed/customer_rfm.parquet`: bảng RFM dùng cho mô hình.
+- `data/processed/customer_rfm_original_rows.parquet`: bảng so sánh chỉ dùng dòng gốc đủ 8 trường, cùng ngày chốt.
+- `reports/rfm_hand_check.csv`: đối chiếu 3 khách với phép tính trực tiếp từ CSV gốc.
+
+Tổng M được đối chiếu với tổng giá của dữ liệu sạch. M dùng đơn vị giá theo nguồn.
+
 ## Kiểm tra
 
 ```powershell

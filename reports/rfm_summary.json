@@ -1,0 +1,11 @@
+{
+  "reference_date": "2020-11-22",
+  "timezone": "UTC",
+  "customers": 234359,
+  "orders": 402993,
+  "repeat_customers": 74783,
+  "repeat_customer_pct": 31.9096,
+  "monetary_value": "118372961.6200",
+  "monetary_reconciles": true,
+  "money_unit": "Source price units; not accounting revenue or profit."
+}
