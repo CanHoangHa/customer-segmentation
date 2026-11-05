@@ -1,0 +1,27 @@
+{
+  "source_file": "kz.csv",
+  "year": 2020,
+  "raw_rows": 2633521,
+  "clean_rows": 600784,
+  "quarantine_rows": 2032737,
+  "accepted_repaired_rows": 37961,
+  "rows_by_primary_reason": {
+    "accepted": 600784,
+    "nonpositive_price": 568,
+    "missing_customer_id": 2030733,
+    "date_outside_scope": 1436
+  },
+  "conflicting_orders": 0,
+  "row_structure": {
+    "6": 431954,
+    "8": 2201567
+  },
+  "reference_date": "2020-11-22",
+  "customers": 234359,
+  "orders": 402993,
+  "repeat_customers": 74783,
+  "repeat_customer_pct": 31.9096,
+  "monetary_value": "118372961.6200",
+  "runner": "portable_python_compatibility",
+  "matched_committed_spark_reports": true
+}

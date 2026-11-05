@@ -19,6 +19,11 @@ $env:JAVA_HOME = "C:\Program Files\Java\jdk-17"
 2. Chạy `python scripts/run_pipeline.py` hoặc mở `notebooks/cleaning_rfm.ipynb` để căn cột, làm sạch và tính RFM. Hai cách tạo cùng đầu ra.
 3. Chạy `python -m pytest -q` để kiểm tra pipeline dữ liệu, hợp đồng RFM và baseline phân khúc.
 
+Nếu môi trường Windows không cho PySpark khởi động Python worker, có thể chạy
+`python scripts/run_portable_rfm.py`. Đây là runner tương thích để tạo Parquet phục vụ mô hình,
+không thay thế pipeline PySpark chính. Runner đọc streaming hai lượt và mặc định chỉ hoàn thành khi
+số dòng, số khách, số đơn, tổng M và ngày chốt khớp các báo cáo Spark đã commit.
+
 ## Chuẩn bị đặc trưng và baseline phân khúc
 
 Sau khi có `data/processed/customer_rfm.parquet`, chạy:
