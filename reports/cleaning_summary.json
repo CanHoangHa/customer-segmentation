@@ -1,0 +1,16 @@
+{
+  "source_file": "kz.csv",
+  "year": 2020,
+  "raw_rows": 2633521,
+  "clean_rows": 600784,
+  "quarantine_rows": 2032737,
+  "accepted_repaired_rows": 37961,
+  "rows_by_primary_reason": {
+    "nonpositive_price": 568,
+    "missing_customer_id": 2030733,
+    "date_outside_scope": 1436,
+    "accepted": 600784
+  },
+  "duplicate_policy": "Keep repeated rows; source has no unique line identifier.",
+  "money_unit": "Source price units; currency is not verified."
+}

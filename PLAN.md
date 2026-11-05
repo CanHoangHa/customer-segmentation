@@ -5,17 +5,17 @@
 - Đề tài 04: phân khúc khách hàng theo hành vi mua sắm.
 - Nhóm gồm 3 người, ưu tiên hoàn thành một pipeline dễ chạy lại và giải thích được.
 - Dataset: **eCommerce Purchase History from Electronics Store**, do REES46/Open CDP công bố; dùng giao dịch thực tế năm 2020 đã ẩn danh.
-- Phương pháp so sánh chính: **phân nhóm theo ngưỡng RFM và K-Means**.
+- So sánh **baseline theo ngưỡng RFM, K-Means, GMM và BIRCH**. Người 2 triển khai và đánh giá cả bốn phương pháp.
 - Người dùng dashboard: nhân viên CRM hoặc quản lý marketing của cửa hàng điện tử.
-- Nhánh tích hợp: `dev`. Kế hoạch này chưa bao gồm tải dữ liệu hay triển khai pipeline.
+- Nhánh tích hợp là `dev`. Phần dữ liệu của người 1 nằm trên `feat/data-rfm`.
 
-Tên đề tài đề xuất: **Phân khúc khách hàng cửa hàng điện tử từ dữ liệu giao dịch thực tế bằng RFM và K-Means**.
+Tên đề tài đề xuất: **Phân khúc khách hàng cửa hàng điện tử từ dữ liệu giao dịch thực tế bằng RFM và các thuật toán phân cụm**.
 
 ### Câu hỏi kinh doanh
 
 1. Khách hàng khác nhau như thế nào về thời gian mua gần nhất, số lần mua và giá trị mua?
 2. Nhóm khách nào đóng góp giá trị mua cao nhưng đã lâu chưa quay lại, cần ưu tiên chăm sóc?
-3. Cách chia nhóm theo ngưỡng RFM và K-Means khác nhau thế nào về mức phân tách, quy mô nhóm, thời gian chạy và khả năng giải thích?
+3. Ngưỡng RFM, K-Means, GMM và BIRCH khác nhau thế nào về mức phân tách, quy mô nhóm, thời gian chạy và khả năng giải thích?
 
 Tên nhóm và nhận xét kinh doanh chỉ được đặt sau khi xem kết quả. Không đặt trước kết luận rằng K-Means tốt hơn hoặc một nhóm chắc chắn đã rời bỏ cửa hàng.
 
@@ -24,8 +24,8 @@ Tên nhóm và nhận xét kinh doanh chỉ được đặt sau khi xem kết qu
 - Nguồn nhà cung cấp: <https://data.rees46.com/>.
 - Dataset: <https://www.kaggle.com/datasets/mkechinov/ecommerce-purchase-history-from-electronics-store>.
 - Mục purchases của nhà cung cấp mô tả khoảng **2,5 triệu dòng mua hàng**, giai đoạn **04–11/2020**, file `purchases.csv.gz` khoảng 50 MB. Đây là thông tin công bố, chưa phải số liệu nhóm tự đo; không gọi 2,5 triệu dòng là 2,5 triệu đơn hàng.
-- Người 1 phải ghi tên file, phiên bản, URL tải, ngày tải, SHA-256, số dòng thực đọc, thời gian thực tế và điều kiện sử dụng/ghi nguồn. Không coi dữ liệu công khai là tự động có giấy phép phân phối lại.
-- Nếu bản Kaggle và bản trực tiếp có khác biệt về thời gian hoặc số dòng, ghi rõ phiên bản được chọn và dùng nhất quán cho cả hai phương pháp. Không ghép các bản khác nhau để tăng số dòng.
+- Người 1 phải ghi tên file, phiên bản, URL tải, ngày tải, số dòng thực đọc, thời gian thực tế và điều kiện sử dụng/ghi nguồn. Không coi dữ liệu công khai là tự động có giấy phép phân phối lại.
+- Nếu bản Kaggle và bản trực tiếp có khác biệt về thời gian hoặc số dòng, ghi rõ phiên bản được chọn và dùng nhất quán cho tất cả phương pháp. Không ghép các bản khác nhau để tăng số dòng.
 - Phạm vi là các bản ghi mua hàng năm 2020 có thời gian hợp lệ, nằm trong khoảng quan sát đã xác minh. Không ép ngày đầu/cuối theo mô tả nếu chưa kiểm tra dữ liệu.
 
 ### Schema dự kiến để khảo sát
@@ -47,41 +47,41 @@ Schema này phải được đối chiếu file thực tế và tài liệu ngu�
 | Thành phần | Công cụ | Cách sử dụng |
 |---|---|---|
 | Ngôn ngữ | Python | Một môi trường chung, khóa phiên bản dependencies sau khi kiểm tra tương thích |
-| Khảo sát | pandas, Jupyter | Đọc mẫu, kiểm tra schema và kiểm chứng trên tập dữ liệu nhỏ |
-| Pipeline dữ liệu | PySpark DataFrame / Spark SQL, chạy local | Đọc dữ liệu, kiểm tra chất lượng, làm sạch và tổng hợp RFM |
-| Lưu trữ | Parquet, engine PyArrow khi cần | Lưu bảng sạch, RFM và kết quả phân nhóm |
-| Phân tích | scikit-learn | Biến đổi/chuẩn hóa RFM, K-Means và Silhouette |
+| Khảo sát | PySpark, Jupyter | Xem mẫu gốc, đếm số trường, đo ô thiếu và phạm vi ngày |
+| Pipeline dữ liệu | PySpark, chạy local | Dùng chung bộ đọc CSV với khảo sát, căn cột, kiểm tra chất lượng và tính RFM |
+| Lưu trữ | Parquet, PyArrow | Ghi bảng sạch và RFM trên Windows khi máy thiếu Hadoop native |
+| Phân tích | scikit-learn | Chuẩn hóa RFM, K-Means, GMM, BIRCH và Silhouette |
 | Dashboard | Streamlit + Plotly | Đọc kết quả đã tính, lọc, vẽ biểu đồ, xuất bảng kết quả |
 | Kiểm thử | pytest | Kiểm chứng quy tắc tiền xử lý, công thức RFM và đối chiếu đầu ra |
 | Quản lý mã | Git + GitHub | Nhánh chức năng, review và tích hợp vào `dev` |
 
-Chỉ đưa bảng RFM đã tổng hợp theo khách hàng từ Spark sang scikit-learn; tránh đưa toàn bộ dữ liệu giao dịch về pandas. Dashboard không chạy lại Spark hoặc huấn luyện K-Means mỗi khi đổi bộ lọc.
+Scikit-learn nhận bảng RFM đã tổng hợp theo khách hàng. Dashboard đọc kết quả phân nhóm đã lưu để áp dụng bộ lọc.
 
 Chưa cần xây API backend, cơ sở dữ liệu server, Kafka, HDFS, Docker hoặc cụm Spark nhiều máy. Spark local là môi trường thực nghiệm đơn máy; báo cáo đúng cấu hình và giới hạn của nó.
 
 ## 4. Luồng xử lý và các bảng bàn giao
 
 ```text
-Dữ liệu gốc + metadata nguồn
-    -> khảo sát schema và chất lượng
-    -> giao dịch sạch + các dòng tách riêng + log quy tắc
-    -> bảng RFM theo khách hàng
-    -> baseline theo ngưỡng RFM / K-Means
-    -> đánh giá và hồ sơ phân khúc
-    -> dashboard, nhận xét và đề xuất CRM
+kz.csv -> đọc bản ghi bằng Spark
+    ├── khảo sát cấu trúc, mẫu gốc, dữ liệu thiếu và khoảng ngày
+    └── căn cột, kiểm tra và tách dòng lỗi
+        -> giao dịch sạch -> RFM theo khách
+        -> ngưỡng RFM / K-Means / GMM / BIRCH
+        -> đánh giá và hồ sơ phân khúc
+        -> dashboard, nhận xét và đề xuất CRM
 ```
 
-Các đường dẫn dưới đây là cấu trúc dự kiến, chưa được tạo trong bước lập kế hoạch này.
-
-| Đầu ra dự kiến | Chủ trì | Nội dung bàn giao |
+| Đầu ra | Chủ trì | Nội dung bàn giao |
 |---|---|---|
 | `data/raw/` | Người 1 | File gốc giữ nguyên và metadata truy vết |
 | `data/processed/purchases_clean.parquet` | Người 1 | Giao dịch hợp lệ để tính RFM |
-| `data/quarantine/` | Người 1 | Dòng bị tách với mã lý do; không âm thầm bỏ dữ liệu |
-| `reports/data_quality.json` và bản tóm tắt | Người 1 | Thống kê trước–sau, từng lý do xử lý, ảnh hưởng tới độ bao phủ |
+| `data/quarantine/purchases_rejected.parquet` | Người 1 | Dòng bị tách và mã lý do |
+| `reports/row_structure.csv`, `reports/column_quality.csv` | Người 1 | Số trường theo dòng và tỷ lệ thiếu của nhóm đủ 8 trường |
+| `reports/cleaning_summary.json`, `reports/cleaning_quality.csv` | Người 1 | Số dòng giữ hoặc tách theo lý do và tỷ lệ thiếu trước–sau |
 | `data/processed/customer_rfm.parquet` | Người 1 | Một dòng/khách: `customer_id`, `recency_days`, `frequency_orders`, `monetary_value`, `last_purchase_at` |
-| `reports/run_metadata.json` | Người 1 phối hợp người 2 | Phiên bản nguồn, ngày chốt, phạm vi, cấu hình, seed và thời gian chạy |
-| `data/curated/customer_segments.parquet` | Người 2 | RFM gốc, nhãn baseline, nhãn K-Means và tên phân khúc sau diễn giải |
+| `reports/rfm_summary.json`, `reports/rfm_hand_check.csv` | Người 1 | Ngày chốt, KPI, đối chiếu tổng M và ba mẫu RFM |
+| `reports/run_metadata.json` | Người 2 | Cấu hình phần cứng, seed và cách đo thời gian so sánh |
+| `data/curated/customer_segments.parquet` | Người 2 | RFM gốc, nhãn và tên phân khúc của các phương pháp đã chạy |
 | `reports/segment_profiles.csv` | Người 2 | Quy mô, RFM điển hình, tỷ trọng giá trị mua, tỷ lệ mua lại theo từng phương pháp/nhóm |
 | `reports/model_comparison.csv` | Người 2 | Cấu hình, chỉ số đánh giá, thời gian và nhận xét so sánh |
 | `app/` | Người 3 | Dashboard đọc đầu ra chung, không chứa công thức KPI độc lập khác pipeline |
@@ -114,9 +114,8 @@ Người 1 và người 2 thống nhất schema bàn giao trước khi triển k
 
 **Giai đoạn 1: khảo sát dữ liệu, chốt phạm vi và quy tắc.**
 
-- Kiểm tra nguồn và quyền sử dụng; đọc mẫu rồi đo chất lượng toàn bộ file.
-- Báo cáo số dòng, khách, đơn, sản phẩm, khoảng ngày, thiếu theo cột, dòng giống nhau, giá không dương và ngày bất thường nếu có.
-- Kiểm tra số đơn/khách và tỷ lệ mua lặp để đánh giá dữ liệu có đủ tín hiệu phân khúc hay không.
+- Ghi nguồn, phiên bản, phạm vi và giới hạn sử dụng trong `docs/data_source.md`.
+- Dùng `notebooks/data_audit.ipynb` để xem vài bản ghi gốc trước, rồi đếm số trường trên toàn file. Sau đó xem mẫu dòng ngắn, thống kê ô thiếu trên nhóm đủ 8 trường và quan sát khoảng ngày.
 - Chốt định nghĩa RFM, ngày chốt, xử lý thiếu khách/đơn/giá, ngày không hợp lệ và ngoại lệ.
 - Phân biệt cột cần cho RFM với cột mô tả phụ. Thiếu brand/category không tự động loại giao dịch có đủ thông tin RFM.
 - Không tự điền mã khách bằng mã đơn, gán nhiều khách thiếu ID thành một khách hoặc điền giá thiếu bằng 0.
@@ -125,30 +124,31 @@ Người 1 và người 2 thống nhất schema bàn giao trước khi triển k
 
 **Giai đoạn 2: làm sạch, lưu Parquet và tính RFM.**
 
-- Viết pipeline PySpark có cấu hình đầu vào/đầu ra, schema và log số dòng qua từng bước.
-- Giữ raw nguyên vẹn; tách dòng lỗi với lý do, ghi bảng chất lượng trước–sau và thống kê chênh lệch tiền có thể xác định.
-- Xuất giao dịch sạch và RFM theo schema bàn giao.
-- Viết script chạy lại thay vì chỉ giữ thao tác trong notebook.
-- Kiểm chứng ít nhất 3 tình huống: RFM của một khách tính tay; một đơn nhiều dòng không tăng F; dòng thiếu khách/giá/ngày được tách đúng quy tắc.
-- Bổ sung đối chiếu tổng M theo khách với tổng giá trị giao dịch sạch trong cùng phạm vi và sai số cho phép.
+- Dùng `scripts/run_pipeline.py` để chạy từ CSV gốc đến Parquet. `notebooks/cleaning_rfm.ipynb` trình bày cùng các bước.
+- Căn cột cho dòng ngắn khớp mẫu, kiểm tra ngày, giá và mã. Tách dòng lỗi kèm lý do và ghi bảng chất lượng trước–sau.
+- Xuất giao dịch sạch và bảng RFM theo schema bàn giao. Báo cáo số đơn và tỷ lệ khách mua lại trong kỳ.
+- Giữ 3 bài kiểm thử cho sửa cấu trúc, làm sạch và đọc lại Parquet, công thức RFM có đơn nhiều dòng.
+- Đối chiếu tổng M với tổng giá giao dịch sạch. Tính lại RFM của ba khách từ các dòng mua sạch.
 
 **Hoàn thành khi:** có bảng chất lượng, định nghĩa KPI, pipeline chạy lại được, Parquet hợp lệ và các kiểm chứng RFM đã qua. Nếu số khách mua lặp quá ít hoặc dữ liệu thiếu làm kết quả không đáng tin, báo cáo ảnh hưởng sớm cho cả nhóm trước khi kết luận về phân khúc.
 
-### Người 2 — baseline theo ngưỡng RFM và K-Means
+### Người 2 — phân nhóm theo ngưỡng RFM, K-Means, GMM và BIRCH
 
-- Nhận bảng RFM và ngày chốt từ người 1; không tự thay đổi tập khách hoặc cách tính KPI.
-- Xây baseline bằng các ngưỡng RFM có cấu hình. Có thể dùng quantile; phải xử lý trường hợp nhiều khách có cùng F mà không tùy tiện chia các giá trị bằng nhau vào nhóm khác nhau.
+- Nhận bảng RFM, ngày chốt và định nghĩa KPI từ người 1.
+- Xây baseline bằng ngưỡng trên RFM gốc. Có thể chọn ngưỡng theo phân vị. Khách có cùng giá trị F phải được xét cùng một ngưỡng.
 - Định nghĩa các nhóm baseline bằng quy tắc có thứ tự ưu tiên, loại trừ lẫn nhau và phủ hết khách đủ điều kiện.
-- Khảo sát độ lệch R/F/M, thử biến đổi `log1p` khi phù hợp với miền giá trị rồi chuẩn hóa. Giữ RFM gốc để diễn giải.
-- Chạy K-Means, đề xuất thử k = 3..6, seed = 42, `n_init` khai báo rõ; điều chỉnh nếu dữ liệu không hỗ trợ số cụm đó.
-- Đánh giá Silhouette cùng quy mô cụm và khả năng giải thích. Không chọn cụm chỉ theo một chỉ số.
-- Khi tính Silhouette cần lấy mẫu, dùng cùng tập khách lấy mẫu cố định cho hai phương pháp và các cấu hình; ghi cỡ mẫu, seed và kiểm tra mẫu có đủ nhãn hợp lệ. Có thể giới hạn 5.000 khách để tránh chi phí quá lớn.
-- So sánh trên cùng tập khách và cùng không gian RFM đã chuẩn hóa. Nếu không thỏa điều kiện tính Silhouette thì ghi không áp dụng, không gán 0.
-- Đo riêng thời gian phân nhóm và thời gian đánh giá. Ghi phần cứng, phiên bản, số khách, cấu hình; có một lần warm-up và ít nhất 3 lần đo để báo cáo trung vị.
-- Kiểm tra độ ổn định K-Means qua một số seed nếu thời gian cho phép; không dùng seed khác nhau làm lợi thế cho một cấu hình.
-- Xuất nhãn hai phương pháp, hồ sơ phân khúc và bảng so sánh. Giải thích tên nhóm dựa trên RFM thực đo; không coi các nhãn số 0, 1, 2 là thứ hạng.
+- Chạy **K-Means** và **GMM**. K-Means gán khách theo tâm cụm gần nhất. GMM cho phép các cụm có độ phân tán khác nhau. Dùng nhãn có xác suất cao nhất của GMM để so sánh.
+- Chạy **BIRCH** để so cách gom khách thành các nhóm nhỏ trước khi tạo cụm cuối. Ghi `threshold` và số cụm thực tế để đánh giá tốc độ và chất lượng trên cùng dữ liệu.
 
-**Hoàn thành khi:** hai cách chạy lại được, nhãn nối đúng theo `customer_id`, bảng đánh giá có số thực đo và mỗi phân khúc có mô tả hành vi rõ ràng.
+#### Kế hoạch so sánh
+
+1. **Chuẩn bị đầu vào chung.** Dùng cùng bảng RFM và cùng tập khách. Chọn cách biến đổi `log1p` nếu cần sau khi xem phân bố, rồi chuẩn hóa một lần cho các thuật toán. Giữ RFM gốc để áp dụng ngưỡng và mô tả nhóm.
+2. **Thử cùng số cụm.** Bắt đầu với 3 đến 6 cụm cho K-Means, GMM và BIRCH. Ghi seed của K-Means và GMM, `n_init` của K-Means, kiểu hiệp phương sai của GMM, `threshold` của BIRCH và số cụm thực tế.
+3. **Đo chất lượng.** Tính Silhouette trên cùng không gian RFM đã chuẩn hóa và cùng mẫu cố định, tối đa 5.000 khách nếu cần. Ghi cỡ mẫu và seed. Nếu nhãn trên mẫu không đủ điều kiện tính Silhouette, ghi không áp dụng.
+4. **Đo thời gian.** Đo bước phân nhóm và gán nhãn riêng với bước tính Silhouette, trên cùng máy. Ghi phần cứng, phiên bản thư viện và số khách. Chạy làm nóng một lần rồi lấy trung vị của ít nhất ba lần đo.
+5. **Lập bảng và giải thích.** Mỗi phương pháp có cấu hình, số nhóm, Silhouette, thời gian chạy, quy mô nhóm và nhận xét nguyên nhân chênh lệch. Dùng RFM gốc và tỷ lệ mua lại để mô tả nhóm. Kiểm tra xem các mô hình có tách được khách chỉ mua một đơn thành nhóm mới mua và nhóm đã lâu chưa mua hay không.
+
+**Hoàn thành khi** cả bốn phương pháp chạy lại được, nhãn nối đúng theo `customer_id`, bảng đánh giá có số thực đo và mỗi phân khúc có mô tả hành vi.
 
 ### Người 3 — dashboard, nhận xét và đề xuất
 
@@ -173,14 +173,14 @@ Người 1 và người 2 thống nhất schema bàn giao trước khi triển k
 |---|---|---|---|---|
 | 1 | Khảo sát nguồn và chất lượng; đề xuất quy tắc | Thiết kế baseline, cấu hình và cách đánh giá | Chốt người dùng, câu hỏi và bố cục dashboard | Cả nhóm chốt KPI, phạm vi, schema bàn giao |
 | 2 | Làm sạch, Parquet, RFM và mẫu tính tay | Dựng baseline trên mẫu RFM | Dựng giao diện và biểu đồ bằng mẫu có nhãn minh họa | Có pipeline và RFM bản đầu |
-| 3 | Kiểm chứng và ổn định đầu ra dữ liệu | Chạy baseline/K-Means, đánh giá, xuất hồ sơ nhóm | Nối kết quả thật, hoàn thiện bộ lọc | Có bảng so sánh và dashboard bản đầu |
-| 4 | Viết phần dữ liệu, chất lượng, kiến trúc | Viết phần phương pháp và thực nghiệm | Viết nhận xét, đề xuất, chụp dashboard | Báo cáo nháp, đối chiếu số liệu toàn bộ |
+| 3 | Kiểm chứng và ổn định đầu ra dữ liệu | Chạy ngưỡng RFM, K-Means, GMM và BIRCH. Xuất hồ sơ nhóm và bảng so sánh | Nối kết quả thật, hoàn thiện bộ lọc | Có bảng so sánh và dashboard bản đầu |
+| 4 | Viết phần dữ liệu, chất lượng, kiến trúc | Viết phần thực nghiệm và giải thích chênh lệch giữa các phương pháp | Viết nhận xét, đề xuất, chụp dashboard | Báo cáo nháp, đối chiếu số liệu toàn bộ |
 | 5 | Chạy pipeline từ đầu theo README | Kiểm tra tái lập và số liệu trong báo cáo | Hoàn thiện dashboard, slide, kịch bản demo | Cả nhóm review, tập trình bày và chốt sản phẩm |
 
 ## 8. Làm việc trên GitHub
 
 - `main`: bản ổn định; `dev`: tích hợp công việc của nhóm.
-- Nhánh đề xuất: `feature/data-rfm`, `feature/segmentation`, `feature/dashboard`.
+- Nhánh đề xuất: `feat/data-rfm`, `feat/segmentation`, `feat/dashboard`.
 - Mỗi người mở PR vào `dev`, ghi rõ thay đổi, cách chạy và bằng chứng kiểm chứng. Một người khác review trước khi merge.
 - Thống nhất sớm tên cột và kiểu dữ liệu; thay đổi schema cần cập nhật đồng thời bên tạo và bên dùng.
 - Không commit raw/processed data dung lượng lớn, môi trường ảo, cache Spark hoặc thông tin đăng nhập. Bước triển khai phải thêm `.gitignore` thích hợp.
@@ -193,12 +193,12 @@ Người 1 và người 2 thống nhất schema bàn giao trước khi triển k
 - [ ] Có ít nhất 2 câu hỏi kinh doanh và người dùng dashboard xác định.
 - [ ] Có bảng chất lượng trước–sau, các quy tắc và số dòng tách theo lý do.
 - [ ] RFM đúng trên mẫu tính tay; pipeline chạy lại không tự nhân dữ liệu.
-- [ ] Baseline và K-Means dùng cùng tập khách; kết quả so sánh là số thực đo.
+- [ ] Ngưỡng RFM, K-Means, GMM và BIRCH dùng cùng tập khách. Bảng so sánh ghi số thực đo và nguyên nhân chênh lệch.
 - [ ] Có Silhouette hợp lệ hoặc giải thích trường hợp không áp dụng, tỷ lệ mua lại trong kỳ và RFM.
 - [ ] Dashboard nhất quán với dữ liệu, có bộ lọc và ít nhất 3 nhận xét dựa trên số liệu.
 - [ ] Có đề xuất CRM, rủi ro, giới hạn dữ liệu và điều kiện áp dụng.
 - [ ] Có README, mã nguồn, kiểm thử, báo cáo, slide/demo và phân công đóng góp.
-- [ ] Cả 3 người hiểu cách tính KPI và giải thích được phần mình thực hiện.
+- [ ] Cả 3 người hiểu cách tính KPI và giải thích được phần phụ trách.
 
 Quy mô và hiệu năng phải được báo cáo trung thực. Số dòng lớn hơn một triệu không tự chứng minh hệ thống phân tán cần thiết. Nếu bổ sung dữ liệu tăng tải mô phỏng, tách khỏi kết quả kinh doanh trên dữ liệu thật và ghi rõ cách tạo.
 
@@ -206,6 +206,8 @@ Quy mô và hiệu năng phải được báo cáo trung thực. Số dòng lớ
 
 - PySpark: <https://spark.apache.org/docs/latest/api/python/getting_started/install.html>.
 - K-Means: <https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html>.
+- GMM: <https://scikit-learn.org/stable/modules/mixture.html>.
+- BIRCH: <https://scikit-learn.org/stable/modules/generated/sklearn.cluster.Birch.html>.
 - Silhouette: <https://scikit-learn.org/stable/modules/generated/sklearn.metrics.silhouette_score.html>.
 - Streamlit: <https://docs.streamlit.io/get-started>.
 
