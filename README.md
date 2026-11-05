@@ -43,6 +43,15 @@ metadata lần chạy nằm trong `reports/`.
 Pipeline dừng với lỗi rõ ràng nếu thiếu cột, null, trùng khách, R/F không nguyên hợp lệ,
 M không dương hoặc timestamp không đọc được. Không sửa trực tiếp bảng RFM bàn giao.
 
+## Dashboard
+
+```powershell
+streamlit run app/app.py
+```
+
+Dashboard đọc artifact đã lưu, có bộ lọc phương pháp/phân khúc, hồ sơ RFM, bảng so sánh và giả
+thuyết CRM. Xem chi tiết tại `docs/dashboard.md`.
+
 Hai notebook dùng chung bộ đọc CSV theo từng bản ghi trong Spark để giữ đúng số trường. Khảo sát tạo báo cáo quan sát. Pipeline giữ nguyên file nguồn, thay các đầu ra mỗi lần chạy và ghi giao dịch bị tách kèm lý do.
 PySpark xử lý dữ liệu và tính RFM. PyArrow ghi Parquet trên Windows khi máy thiếu Hadoop native.
 

@@ -1,0 +1,55 @@
+{
+  "generated_at_utc": "2026-11-05T17:27:17.008506+00:00",
+  "git_commit": "860e4554840f83c4867ce54dc1fc497a7284e816",
+  "input_file": "customer_rfm.parquet",
+  "input_sha256": "9fb70f8213c306fd613585ae162ad8a5bff6fe421d4354caced60abfdeefaebc",
+  "rows": 234359,
+  "reference_date": "2020-11-22",
+  "seed": 42,
+  "silhouette_sample_size": 5000,
+  "silhouette_sample_indices_sha256": "0410f2b226009d289999936f332611d94ec1215ebe8806d6983c6b6f71fda770",
+  "benchmark_repeats": 3,
+  "warmup": true,
+  "minimum_segment_pct": 0.01,
+  "features": {
+    "rows": 234359,
+    "customer_order": "customer_id ascending",
+    "feature_order": [
+      "recency_days",
+      "frequency_orders",
+      "monetary_value"
+    ],
+    "transform": "log1p",
+    "scaler": "StandardScaler",
+    "raw_min": {
+      "recency_days": 1.0,
+      "frequency_orders": 1.0,
+      "monetary_value": 0.02
+    },
+    "raw_max": {
+      "recency_days": 322.0,
+      "frequency_orders": 178.0,
+      "monetary_value": 68035.6
+    },
+    "logged_mean": {
+      "recency_days": 4.135019770115631,
+      "frequency_orders": 0.9041041142238067,
+      "monetary_value": 5.194804179795452
+    },
+    "logged_scale": {
+      "recency_days": 1.0474867614529666,
+      "frequency_orders": 0.3731105902706789,
+      "monetary_value": 1.5808549310582134
+    },
+    "constant_features": []
+  },
+  "environment": {
+    "python": "3.12.14",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "cpu_count": 12,
+    "numpy": "2.5.4",
+    "pandas": "2.3.3",
+    "pyarrow": "26.0.1",
+    "scikit_learn": "1.9.1"
+  }
+}

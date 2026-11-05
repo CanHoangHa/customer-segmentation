@@ -1,0 +1,26 @@
+{
+  "criterion": "Highest silhouette among configurations with at least two clusters and minimum segment share >= 1.00%; fallback to any valid silhouette.",
+  "selected": {
+    "rfm_threshold": "rfm_threshold_5",
+    "kmeans": "kmeans_k3",
+    "gmm": "gmm_k3",
+    "birch": "birch_k3_t0.7"
+  },
+  "stable_label_mappings": {
+    "kmeans": {
+      "1": "S1",
+      "2": "S2",
+      "0": "S3"
+    },
+    "gmm": {
+      "2": "S1",
+      "0": "S2",
+      "1": "S3"
+    },
+    "birch": {
+      "0": "S1",
+      "1": "S2",
+      "2": "S3"
+    }
+  }
+}
