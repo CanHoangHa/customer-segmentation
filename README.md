@@ -28,9 +28,12 @@ python scripts/run_segmentation.py --expected-rows 234359
 ```
 
 Lệnh này kiểm tra hợp đồng RFM, sắp xếp khách theo `customer_id`, tạo ma trận đặc trưng
-`log1p + StandardScaler` dùng chung cho các mô hình và ghi baseline ngưỡng RFM vào
-`data/curated/customer_segments.parquet`. Metadata đặc trưng và thống kê baseline nằm trong
-`reports/feature_metadata.json` và `reports/baseline_summary.json`.
+`log1p + StandardScaler`, chạy baseline RFM, K-Means, GMM và BIRCH rồi ghi các phương pháp được
+chọn vào `data/curated/customer_segments.parquet`. Bảng so sánh, profile, lựa chọn mô hình và
+metadata lần chạy nằm trong `reports/`.
+
+Để chỉ kiểm tra hợp đồng và baseline, thêm `--baseline-only`. Tham số benchmark có thể xem bằng
+`python scripts/run_segmentation.py --help`.
 
 Pipeline dừng với lỗi rõ ràng nếu thiếu cột, null, trùng khách, R/F không nguyên hợp lệ,
 M không dương hoặc timestamp không đọc được. Không sửa trực tiếp bảng RFM bàn giao.
