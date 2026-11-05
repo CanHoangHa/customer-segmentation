@@ -165,7 +165,197 @@ Người 1 và người 2 thống nhất schema bàn giao trước khi triển k
 
 **Hoàn thành khi:** dashboard chạy từ hướng dẫn chung, số liệu khớp các bảng nguồn, có bộ lọc hoạt động, ít nhất 3 nhận xét kiểm chứng được và giải thích được các giới hạn.
 
-## 7. Tiến độ mẫu cho 5 ngày
+## 7. Trạng thái hiện tại và kế hoạch hiện thực phần còn lại
+
+### 7.1. Mốc đã hoàn thành trên nhánh `dev`
+
+Phần Người 1 đã có thể xem là đầu vào ổn định cho giai đoạn mô hình, với điều kiện không đổi schema mà không cập nhật hợp đồng dữ liệu:
+
+- Đã có khảo sát dữ liệu, quy tắc căn dòng ngắn, làm sạch và tách dòng lỗi.
+- Đã có pipeline PySpark từ `data/raw/kz.csv` đến giao dịch sạch và RFM.
+- Đã có kiểm thử sửa cấu trúc, kiểm thử làm sạch/Parquet và mẫu tính tay RFM.
+- Đã có các báo cáo chất lượng và bàn giao schema cho Người 2–3.
+- Snapshot hiện tại gồm 234.359 khách, ngày chốt 22/11/2020, 31,9096% khách có ít nhất hai đơn và tổng M 118.372.961,6200 đơn vị giá theo nguồn.
+
+Các phần chưa có code trong repo:
+
+1. Baseline phân khúc theo ngưỡng RFM.
+2. K-Means, GMM và BIRCH trên cùng tập khách.
+3. Đánh giá Silhouette, thời gian chạy, hồ sơ cụm và bảng so sánh.
+4. File nhãn phân khúc dùng chung và dữ liệu curated cho dashboard.
+5. Dashboard Streamlit/Plotly, nhận xét định lượng và đề xuất CRM.
+6. Kiểm thử mô hình, kiểm thử hợp đồng đầu ra, kiểm thử dashboard và chạy toàn pipeline.
+7. README hoàn chỉnh, báo cáo, slide, ảnh/log minh chứng và kịch bản demo.
+
+### 7.2. Quyết định kỹ thuật chung
+
+- `customer_id` luôn là chuỗi và là khóa nối duy nhất. Trước khi chạy mô hình phải kiểm tra một dòng/khách, không null và không trùng.
+- Giữ RFM gốc để tính KPI và giải thích. Tạo ma trận mô hình riêng theo thứ tự `recency_days`, `frequency_orders`, `monetary_value`.
+- Với mô hình học máy, dùng `log1p` cho cả ba đặc trưng không âm, sau đó `StandardScaler`. Lưu thông số biến đổi và không ghi đè RFM gốc.
+- Baseline dùng RFM gốc. Điểm R đảo chiều; F và M cùng chiều. Dùng percentile rank với `method="average"` trước khi chia bốn mức để các giá trị F bằng nhau không bị tách tùy ý.
+- Tất cả phương pháp dùng cùng cohort 234.359 khách sau bước kiểm tra schema. Không tự loại ngoại lệ riêng cho một thuật toán.
+- Seed mặc định là `42`. Sắp xếp theo `customer_id` trước khi lấy mẫu hoặc ghi file để kết quả tái lập được.
+- Huấn luyện/gán nhãn trên toàn bộ cohort. Silhouette tính trên cùng mẫu cố định tối đa 5.000 khách để tránh chi phí bộ nhớ bậc hai; lưu seed, danh sách/hash mẫu và cỡ mẫu.
+- Tách thời gian `fit_predict` khỏi thời gian tính Silhouette. Mỗi cấu hình làm nóng một lần, đo ít nhất ba lần và báo cáo trung vị.
+- Nhãn cụm số của thuật toán không có ý nghĩa kinh doanh. Sau khi lập profile, ánh xạ ổn định thành `S1...Sk`; tên kinh doanh nằm trong một file mapping được review, không hard-code rải rác trong dashboard.
+- Dashboard chỉ đọc artifact đã tính. Bộ lọc không huấn luyện lại mô hình, không tính lại RFM và không thay đổi ngày chốt.
+
+### 7.3. Hợp đồng file cần tạo
+
+```text
+src/segmentation/
+    __init__.py
+    features.py          # kiểm tra schema, cohort, log1p và chuẩn hóa
+    baseline.py          # điểm RFM và 5 nhóm baseline loại trừ lẫn nhau
+    models.py            # K-Means, GMM, BIRCH và cấu hình ứng viên
+    evaluation.py        # Silhouette, timing, profile và kiểm tra đối chiếu
+    pipeline.py          # điều phối, chọn mô hình và ghi artifact
+scripts/
+    run_segmentation.py  # CLI cho phần Người 2
+    run_all.py           # chạy data/RFM rồi segmentation theo thứ tự
+app/
+    app.py               # entrypoint Streamlit
+    data.py              # đọc/kiểm tra artifact, cache dữ liệu
+    charts.py            # biểu đồ thuần, không tự tính KPI khác pipeline
+config/
+    segment_labels.json  # nhãn và giả thuyết hành động sau khi xem profile
+tests/
+    test_features.py
+    test_baseline.py
+    test_models.py
+    test_artifacts.py
+    test_dashboard.py
+docs/
+    modeling.md
+    dashboard.md
+    results.md
+```
+
+Artifact đầu ra:
+
+| File | Grain và trường tối thiểu | Điều kiện đối chiếu |
+|---|---|---|
+| `data/curated/customer_segments.parquet` | Một dòng/khách/phương pháp: RFM gốc, `method`, `segment_id`, `segment_name`, `is_repeat_customer`; GMM có thể thêm xác suất | Mỗi phương pháp đủ đúng 234.359 khách, không trùng khóa `(customer_id, method)` |
+| `reports/model_comparison.csv` | Một dòng/cấu hình: phương pháp, tham số, số cụm yêu cầu/thực tế, Silhouette, cỡ mẫu, thời gian từng lần và trung vị, trạng thái chọn | Không so Silhouette từ không gian hoặc mẫu khác nhau |
+| `reports/segment_profiles.csv` | Một dòng/phương pháp/phân khúc: số khách, tỷ trọng khách, median R/F/M, tổng M, tỷ trọng M, số và tỷ lệ khách mua lại | Tổng số khách và tổng M của từng phương pháp phải khớp RFM nguồn |
+| `reports/run_metadata.json` | Thời điểm chạy, commit, Python/OS/CPU/RAM, phiên bản thư viện, seed, ngày chốt, input hash, cấu hình biến đổi | Đủ thông tin để chạy và giải thích lại thí nghiệm |
+| `reports/model_selection.json` | Cấu hình được chọn, tiêu chí chọn và lý do loại cấu hình lỗi/thoái hóa | Không mặc định phương pháp có Silhouette cao nhất là tốt nhất về kinh doanh |
+
+### 7.4. Baseline RFM bắt buộc
+
+Baseline dùng bốn mức cho từng R/F/M và năm nhóm có thứ tự ưu tiên sau:
+
+1. `champions`: R >= 3, F >= 3, M >= 3.
+2. `loyal`: F >= 3 và R >= 2, sau khi đã lấy `champions`.
+3. `high_value_at_risk`: M >= 3 và R <= 2, sau hai nhóm trên.
+4. `new_or_promising`: R >= 3 và F <= 2, sau ba nhóm trên.
+5. `needs_attention`: các khách còn lại.
+
+Các ngưỡng và thứ tự phải nằm trong code/config, có test phủ hết khách và không giao nhau. Đây là baseline giải thích được, không phải chân lý về CRM; tên nhóm có thể điều chỉnh sau khi xem profile nhưng quy tắc đã dùng phải được lưu cùng kết quả.
+
+### 7.5. Kế hoạch thí nghiệm mô hình
+
+| Phương pháp | Cấu hình cần chạy | Ghi chú |
+|---|---|---|
+| Baseline RFM | 5 nhóm cố định | Là mốc giải thích được và phương án bắt buộc để so với K-Means |
+| K-Means | `k=3..6`, `random_state=42`, `n_init=20`, `max_iter=300` | Ghi inertia để chẩn đoán, không dùng inertia thay Silhouette |
+| GMM | `k=3..6`, `random_state=42`, `covariance_type="full"`, `n_init=3`, có `reg_covar` | Ghi hội tụ và phân bố xác suất gán nhãn |
+| BIRCH | `n_clusters=3..6`, thử `threshold` trong tập nhỏ đã định nghĩa | Ghi threshold và số cụm thực tế vì BIRCH có thể tạo số cụm khác yêu cầu |
+
+Thực hiện hai lớp so sánh:
+
+1. So sánh công bằng chính ở năm nhóm/cụm cho cả bốn phương pháp.
+2. Với từng thuật toán học máy, chọn thêm cấu hình tốt nhất trong `k=3..6` theo Silhouette, nhưng loại cấu hình có cụm rỗng, chỉ một cụm, hoặc cụm quá nhỏ dưới ngưỡng đã công bố. Nếu các chỉ số gần nhau, ưu tiên cấu hình dễ giải thích và cân bằng hơn.
+
+Mỗi cụm sau khi chọn được remap ổn định theo profile, ưu tiên tổng/median M giảm dần, F giảm dần và R tăng dần. Sau đó mới review và điền tên kinh doanh trong `config/segment_labels.json`.
+
+### 7.6. Các giai đoạn hiện thực
+
+#### Giai đoạn A — khóa hợp đồng và môi trường
+
+- Bổ sung `numpy`, `pandas`, `scikit-learn`, `streamlit` và `plotly` vào `requirements.txt` với khoảng phiên bản tương thích Python 3.11.
+- Tạo validator cho schema RFM, kiểu dữ liệu, null, trùng khách, giá trị âm và số dòng.
+- Tạo CLI `scripts/run_segmentation.py` nhận đường dẫn input/output/report, seed và cỡ mẫu Silhouette; không hard-code đường dẫn ngoài giá trị mặc định của repo.
+- Chốt schema artifact với Người 3 trước khi dựng UI.
+
+**Nghiệm thu:** validator chạy qua bảng bàn giao thật và thất bại rõ ràng trên fixture sai schema/null/trùng khóa.
+
+#### Giai đoạn B — feature pipeline và baseline
+
+- Đọc Parquet bằng PyArrow/Pandas, sắp xếp khóa, tạo `is_repeat_customer = frequency_orders >= 2`.
+- Tạo RFM percentile scores, năm nhóm baseline và ma trận `log1p + StandardScaler` dùng chung.
+- Lưu metadata của scaler, thứ tự cột, số khách và thống kê trước/sau biến đổi.
+
+**Nghiệm thu:** không mất khách, baseline phủ 100%, các nhóm loại trừ lẫn nhau, phép biến đổi hữu hạn và tái lập với cùng input.
+
+#### Giai đoạn C — K-Means, GMM và BIRCH
+
+- Tách hàm tạo model khỏi vòng chạy benchmark để unit test được.
+- Chạy toàn bộ grid nhỏ đã chốt, bắt lỗi hội tụ/thoái hóa và vẫn ghi một dòng thất bại vào bảng so sánh.
+- Dùng cùng ma trận feature và cùng mẫu Silhouette; không fit scaler lại cho từng model.
+- Lưu nhãn của baseline, cấu hình năm cụm và cấu hình được chọn của từng thuật toán.
+
+**Nghiệm thu:** cùng seed cho cùng nhãn/kết quả; mỗi model được chọn có từ hai cụm hợp lệ; nhãn nối đúng 234.359 `customer_id`.
+
+#### Giai đoạn D — đánh giá, profile và artifact
+
+- Tính Silhouette, thời gian, quy mô cụm, median R/F/M, tỷ trọng M và tỷ lệ mua lại trong kỳ.
+- Kiểm tra tổng số khách, tổng M và số khách mua lại sau group-by phải khớp báo cáo RFM.
+- Tạo bảng so sánh chứa cả baseline, cấu hình năm cụm và cấu hình được chọn.
+- Viết `docs/modeling.md` mô tả feature, tham số, cách đo, cách chọn và giới hạn của Silhouette.
+
+**Nghiệm thu:** bốn artifact trong Mục 7.3 được tạo tự động từ một lệnh, schema ổn định và mọi phép đối chiếu đều qua.
+
+#### Giai đoạn E — dashboard và insight
+
+Dashboard gồm bốn trang hoặc bốn tab:
+
+1. **Chất lượng và phạm vi:** dòng gốc/sạch/tách, độ bao phủ 22,81%, phạm vi ngày, ngày chốt và cảnh báo đồng tiền chưa xác minh.
+2. **Hồ sơ phân khúc:** bộ lọc phương pháp/phân khúc, KPI số khách, tỷ lệ mua lại, median R/F/M, tỷ trọng M; biểu đồ quy mô và profile chuẩn hóa.
+3. **So sánh phương pháp:** Silhouette, thời gian, số cụm, phân bố quy mô; giải thích baseline và giới hạn so sánh.
+4. **Hành động CRM:** ít nhất ba insight có số thực đo, giả thuyết chiến dịch, đối tượng, KPI theo dõi, rủi ro và điều kiện dừng/thử nghiệm.
+
+Scatter plot nhiều điểm phải dùng sample cố định và ghi cỡ mẫu; KPI/tables vẫn dùng toàn bộ dữ liệu. Không hiển thị `customer_id` như thông tin cần hành động và không cho tải raw data mặc định.
+
+**Nghiệm thu:** `streamlit run app/app.py` khởi động được; bộ lọc không làm thay đổi tổng ngoài phạm vi đã chọn; số trên UI khớp `segment_profiles.csv`; không có công thức KPI độc lập mâu thuẫn pipeline.
+
+#### Giai đoạn F — kiểm thử, tài liệu và sản phẩm nộp
+
+- Unit test: schema/feature, tie ở F, baseline precedence, cấu hình model, metric không áp dụng và remap nhãn.
+- Integration test trên fixture RFM nhỏ: chạy bốn phương pháp, ghi/đọc Parquet/CSV/JSON, kiểm tra cardinality và tổng M.
+- Dashboard smoke test bằng `streamlit.testing.v1.AppTest` hoặc lớp đọc dữ liệu tách biệt nếu môi trường không hỗ trợ render UI.
+- Chạy lại `pytest -q`, pipeline Người 1, segmentation và dashboard theo README trong môi trường sạch.
+- Bổ sung README với bốn lệnh: cài đặt, data/RFM, segmentation, dashboard; ghi Java/Python tương thích và vị trí artifact.
+- Hoàn thiện `docs/results.md`, sơ đồ kiến trúc, bảng so sánh, ít nhất ba insight, giới hạn, công cụ AI đã dùng và phân công đóng góp.
+- Chuẩn bị ảnh/log chạy pipeline, ảnh dashboard, báo cáo PDF/DOCX, slide và kịch bản demo có thể chạy lại.
+
+**Nghiệm thu:** một người không viết module vẫn có thể làm theo README để tạo lại artifact và mở dashboard; số liệu trong dashboard, báo cáo và slide khớp nhau.
+
+### 7.7. Thứ tự PR và phân công phần còn lại
+
+| PR | Nhánh | Chủ trì | Phạm vi | Phụ thuộc |
+|---|---|---|---|---|
+| 1 | `feat/segmentation-contract` | Người 2 | Dependencies, schema validator, feature pipeline, baseline, test | RFM Người 1 |
+| 2 | `feat/segmentation` | Người 2 | Ba model, benchmark, selection, profile, artifact, docs modeling | PR 1 |
+| 3 | `feat/dashboard` | Người 3 | Data loader, charts, filters, KPI, CRM page, UI tests | Schema PR 1; dữ liệu thật từ PR 2 |
+| 4 | `docs/final-deliverables` | Cả nhóm | README end-to-end, results, kiến trúc, báo cáo, slide, demo | PR 2–3 |
+
+Người 1 review các phép đối chiếu số khách/tổng M/độ bao phủ. Người 2 review số liệu mô hình trên dashboard. Người 3 review tính dễ hiểu và điều kiện áp dụng của insight. Mỗi PR vào `dev` phải kèm lệnh chạy và kết quả test.
+
+### 7.8. Rủi ro cần kiểm soát
+
+| Rủi ro | Cách xử lý trong code/báo cáo |
+|---|---|
+| F có nhiều giá trị bằng 1 làm chia quantile lỗi | Dùng percentile rank giữ tie, test riêng trường hợp nhiều giá trị bằng nhau |
+| RFM lệch mạnh và khách M rất lớn chi phối khoảng cách | Dùng `log1p + StandardScaler`; báo cáo phân bố gốc và không tự xóa khách giá trị cao |
+| Silhouette toàn bộ 234k khách tốn bộ nhớ lớn | Dùng cùng mẫu cố định tối đa 5.000; ghi rõ đây là ước lượng trên mẫu |
+| Cụm rất nhỏ hoặc model không hội tụ | Đánh dấu cấu hình không hợp lệ, ghi lý do, không âm thầm bỏ dòng khỏi bảng |
+| Nhãn cluster đổi số giữa lần chạy | Seed cố định, sort input và remap theo profile; không dùng raw cluster ID làm tên kinh doanh |
+| Chỉ 22,81% dòng gốc đủ điều kiện | Luôn hiển thị coverage và giới hạn suy rộng; không gọi kết quả là toàn bộ khách cửa hàng |
+| Chưa xác minh đồng tiền và quyền phân phối file | Dùng “đơn vị giá theo nguồn”, không commit dữ liệu, ghi URL và điều kiện sử dụng |
+| Dashboard và báo cáo lệch KPI | Dashboard đọc artifact profile; thêm test đối chiếu và một bước review số liệu trước khi chụp ảnh |
+
+## 8. Tiến độ mẫu cho 5 ngày
 
 Đây là lịch tương đối, giả định khoảng 3–4 giờ/người/ngày; điều chỉnh theo hạn nộp thực tế.
 
@@ -177,7 +367,7 @@ Người 1 và người 2 thống nhất schema bàn giao trước khi triển k
 | 4 | Viết phần dữ liệu, chất lượng, kiến trúc | Viết phần thực nghiệm và giải thích chênh lệch giữa các phương pháp | Viết nhận xét, đề xuất, chụp dashboard | Báo cáo nháp, đối chiếu số liệu toàn bộ |
 | 5 | Chạy pipeline từ đầu theo README | Kiểm tra tái lập và số liệu trong báo cáo | Hoàn thiện dashboard, slide, kịch bản demo | Cả nhóm review, tập trình bày và chốt sản phẩm |
 
-## 8. Làm việc trên GitHub
+## 9. Làm việc trên GitHub
 
 - `main`: bản ổn định; `dev`: tích hợp công việc của nhóm.
 - Nhánh đề xuất: `feat/data-rfm`, `feat/segmentation`, `feat/dashboard`.
@@ -187,7 +377,7 @@ Người 1 và người 2 thống nhất schema bàn giao trước khi triển k
 - README phải có cách lấy đúng phiên bản dữ liệu, cài môi trường Python/Java tương thích, chạy pipeline, chạy phân nhóm và mở dashboard.
 - Dữ liệu mẫu nếu chia sẻ phải tuân thủ điều kiện của nguồn. Ghi rõ công cụ AI đã dùng và cách nhóm tự kiểm chứng kết quả.
 
-## 9. Điều kiện hoàn thành bài
+## 10. Điều kiện hoàn thành bài
 
 - [ ] Nguồn, điều kiện sử dụng, phiên bản dữ liệu và phạm vi thời gian được ghi rõ.
 - [ ] Có ít nhất 2 câu hỏi kinh doanh và người dùng dashboard xác định.
@@ -202,7 +392,7 @@ Người 1 và người 2 thống nhất schema bàn giao trước khi triển k
 
 Quy mô và hiệu năng phải được báo cáo trung thực. Số dòng lớn hơn một triệu không tự chứng minh hệ thống phân tán cần thiết. Nếu bổ sung dữ liệu tăng tải mô phỏng, tách khỏi kết quả kinh doanh trên dữ liệu thật và ghi rõ cách tạo.
 
-## 10. Tài liệu tham khảo kỹ thuật
+## 11. Tài liệu tham khảo kỹ thuật
 
 - PySpark: <https://spark.apache.org/docs/latest/api/python/getting_started/install.html>.
 - K-Means: <https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html>.
