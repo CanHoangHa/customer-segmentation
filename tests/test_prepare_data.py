@@ -4,7 +4,7 @@ from decimal import Decimal
 import pyarrow.parquet as pq
 import pytest
 
-from src.prepare_data import COLUMNS, align_record, clean_purchases, normalize_csv, read_normalized, start_spark, validate_purchases, write_parquet
+from src.prepare_data import COLUMNS, align_purchases, clean_purchases, read_source, start_spark, validate_purchases, write_parquet
 from src.rfm import build_rfm
 
 
@@ -15,17 +15,27 @@ def spark():
     session.stop()
 
 
-def test_short_row_repair():
-    values, status = align_record(["2020-11-21 10:00:00 UTC", "101", "1", "", "20.00", "1515915625453675584"])
-    assert status == "repaired_6_fields"
-    assert values[3:6] == ["", "", ""]
-    assert values[6:] == ["20.00", "1515915625453675584"]
-    values, status = align_record(["2020-11-21 10:00:00 UTC", "101", "1", "", "20", ""])
-    assert status == "repaired_6_fields"
-    assert values[-1] == ""
-    for fourth, price, customer in [("unexpected", "20", "123"), ("", "unknown", "123"), ("", "20", "not-an-id")]:
-        _, status = align_record(["2020-11-21 10:00:00 UTC", "101", "1", fourth, price, customer])
-        assert status == "unmatched_structure"
+def test_short_row_repair(spark, tmp_path):
+    source = tmp_path / "source.csv"
+    with source.open("w", encoding="utf-8", newline="") as stream:
+        writer = csv.writer(stream)
+        writer.writerow(COLUMNS)
+        for fourth, price, customer in [
+            ("", "20.00", "1515915625453675584"),
+            ("", "20", ""),
+            ("unexpected", "20", "123"),
+            ("", "unknown", "123"),
+            ("", "20", "not-an-id"),
+        ]:
+            writer.writerow(["2020-11-21 10:00:00 UTC", "101", "1", fourth, price, customer])
+    raw = read_source(spark, source)
+    assert [row.field_count for row in raw.collect()] == [6] * 5
+    rows = align_purchases(raw).orderBy("source_record").collect()
+    assert rows[0].row_status == "repaired_6_fields"
+    assert (rows[0].price, rows[0].user_id) == ("20.00", "1515915625453675584")
+    assert (rows[0].category_id, rows[0].category_code, rows[0].brand) == (None, None, None)
+    assert rows[1].row_status == "repaired_6_fields" and rows[1].user_id is None
+    assert all(row.row_status == "unmatched_structure" for row in rows[2:])
 
 
 def test_validation_and_parquet_round_trip(spark, tmp_path):
@@ -47,9 +57,7 @@ def test_validation_and_parquet_round_trip(spark, tmp_path):
         writer.writerow(COLUMNS)
         writer.writerows(rows)
     original_bytes = source.read_bytes()
-    normalized = tmp_path / "normalized.csv"
-    normalize_csv(source, normalized)
-    validated = validate_purchases(read_normalized(spark, normalized)).cache()
+    validated = validate_purchases(align_purchases(read_source(spark, source))).cache()
     clean = clean_purchases(validated)
     assert clean.count() == 3
     assert validated.filter("rejection_reason is not null").count() == 6
@@ -81,9 +89,7 @@ def test_rfm_matches_hand_calculation(spark, tmp_path):
         writer = csv.writer(stream)
         writer.writerow(COLUMNS)
         writer.writerows(rows)
-    normalized = tmp_path / "normalized.csv"
-    normalize_csv(source, normalized)
-    clean = clean_purchases(validate_purchases(read_normalized(spark, normalized)))
+    clean = clean_purchases(validate_purchases(align_purchases(read_source(spark, source))))
     rfm, reference_date = build_rfm(clean)
     actual = {row.customer_id: row for row in rfm.collect()}
     assert reference_date == "2020-11-22"

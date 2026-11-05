@@ -3,8 +3,6 @@
 import csv
 import json
 import os
-from pathlib import Path
-import re
 import sys
 
 import pyarrow as pa
@@ -16,37 +14,6 @@ COLUMNS = [
     "event_time", "order_id", "product_id", "category_id",
     "category_code", "brand", "price", "user_id",
 ]
-
-
-def align_record(values):
-    """Repair only the six-field pattern observed in the audit notebook."""
-    values = [value.strip() for value in values]
-    if len(values) == 8:
-        return values, "full_width"
-    if (
-        len(values) == 6
-        and values[3] == ""
-        and re.fullmatch(r"-?\d+(\.\d+)?", values[4])
-        and (values[5] == "" or values[5].isdigit())
-    ):
-        return values[:3] + ["", "", ""] + values[4:], "repaired_6_fields"
-    return [""] * 8, "unmatched_structure"
-
-
-def normalize_csv(source, destination):
-    """Keep the source unchanged and record the origin of every row."""
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    with source.open(encoding="utf-8-sig", newline="") as input_file:
-        reader = csv.reader(input_file)
-        if next(reader) != COLUMNS:
-            raise ValueError("The input columns do not match the dataset schema.")
-        with destination.open("w", encoding="utf-8", newline="") as output_file:
-            writer = csv.writer(output_file)
-            writer.writerow(["source_record", "field_count", "row_status", "unmatched_values"] + COLUMNS)
-            for number, values in enumerate(reader, 1):
-                aligned, status = align_record(values)
-                original = json.dumps(values, ensure_ascii=True) if status == "unmatched_structure" else ""
-                writer.writerow([number, len(values), status, original] + aligned)
 
 
 def start_spark():
@@ -67,19 +34,69 @@ def start_spark():
         .config("spark.sql.legacy.timeParserPolicy", "CORRECTED")
         .config("spark.sql.shuffle.partitions", "4")
         .config("spark.ui.enabled", "false")
+        .config("spark.ui.showConsoleProgress", "false")
         .getOrCreate()
     )
     spark.sparkContext.setLogLevel("ERROR")
     return spark
 
 
-def read_normalized(spark, path):
-    fields = [T.StructField("source_record", T.LongType()), T.StructField("field_count", T.IntegerType())]
-    fields += [T.StructField(name, T.StringType()) for name in ["row_status", "unmatched_values"] + COLUMNS]
-    frame = spark.read.option("header", True).schema(T.StructType(fields)).csv(str(path))
-    for name in ["unmatched_values"] + COLUMNS:
-        frame = frame.withColumn(name, F.when(F.trim(F.col(name)) != "", F.trim(F.col(name))))
-    return frame
+def read_source(spark, path):
+    """Read the single-line CSV records without padding short rows."""
+    source = path.resolve().as_uri()
+    header = spark.read.text(source).first()
+    if header is None or next(csv.reader([header.value.lstrip("\ufeff")]), []) != COLUMNS:
+        raise ValueError("The input columns do not match the dataset schema.")
+
+    def parse_partition(records):
+        for line, number in records:
+            if number > 0:
+                yield number, next(csv.reader([line], strict=True), [])
+
+    records = spark.sparkContext.textFile(source).zipWithIndex().mapPartitions(parse_partition)
+    return spark.createDataFrame(records, "source_record long, fields array<string>").withColumn(
+        "field_count", F.size("fields")
+    )
+
+
+def short_row_pattern():
+    fields = F.transform("fields", lambda value: F.trim(value))
+    return (
+        (F.col("field_count") == 6)
+        & (fields[3] == "")
+        & fields[4].rlike(r"^-?[0-9]+(\.[0-9]+)?$")
+        & fields[5].rlike(r"^([0-9]+)?$")
+    )
+
+
+def align_purchases(raw):
+    fields = F.col("fields")
+    status = (
+        F.when(F.col("field_count") == 8, "full_width")
+        .when(short_row_pattern(), "repaired_6_fields")
+        .otherwise("unmatched_structure")
+    )
+    repaired = F.concat(F.slice(fields, 1, 3), F.array(F.lit(None), F.lit(None), F.lit(None)),
+                        F.slice(fields, 5, 2))
+    frame = raw.withColumn("row_status", status).withColumn(
+        "unmatched_values", F.when(F.col("row_status") == "unmatched_structure", F.to_json(fields))
+    )
+    aligned = (
+        F.when(F.col("row_status") == "full_width", fields)
+        .when(F.col("row_status") == "repaired_6_fields", repaired)
+    )
+    frame = frame.withColumn("aligned", aligned)
+    columns = []
+    for index, name in enumerate(COLUMNS):
+        value = F.trim(F.col("aligned")[index])
+        columns.append(F.when(value != "", value).alias(name))
+    return frame.select("source_record", "field_count", "row_status", "unmatched_values", *columns)
+
+
+def missing_counts(frame, names):
+    return frame.agg(*[
+        F.count(F.when(F.col(name).isNull(), 1)).alias(name) for name in names
+    ]).first()
 
 
 def validate_purchases(frame, year=2020):
@@ -162,9 +179,8 @@ def write_parquet(frame, path, batch_size=25000):
     temporary.replace(path)
 
 
-def prepare_data(spark, source, normalized_path, output_dir, report_dir, year=2020):
-    normalize_csv(source, normalized_path)
-    aligned = read_normalized(spark, normalized_path)
+def prepare_data(spark, source, output_dir, report_dir, year=2020):
+    aligned = align_purchases(read_source(spark, source)).cache()
     validated = validate_purchases(aligned, year).cache()
     reason_counts = {row["rejection_reason"] or "accepted": row["count"]
                      for row in validated.groupBy("rejection_reason").count().collect()}
@@ -182,7 +198,7 @@ def prepare_data(spark, source, normalized_path, output_dir, report_dir, year=20
         ("after_validation", clean, ["event_time", "order_id", "product_id", "category_id", "category_code", "brand", "price", "customer_id"]),
     ]:
         total = raw_count if label == "before_validation" else clean_count
-        missing = table.agg(*[F.sum(F.col(name).isNull().cast("long")).alias(name) for name in names]).first()
+        missing = missing_counts(table, names)
         for name in names:
             quality.append({"stage": label, "column": name, "rows": total,
                             "missing_count": missing[name], "missing_pct": round(missing[name] / total * 100, 4)})
@@ -202,4 +218,5 @@ def prepare_data(spark, source, normalized_path, output_dir, report_dir, year=20
     write_parquet(rejected, output_dir.parent / "quarantine" / "purchases_rejected.parquet")
     (report_dir / "cleaning_summary.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
     validated.unpersist()
+    aligned.unpersist()
     return clean, report

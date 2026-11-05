@@ -1,5 +1,6 @@
 """Build one RFM record per customer from valid purchases."""
 
+import csv
 from datetime import date, timedelta
 import json
 
@@ -63,3 +64,42 @@ def save_rfm(purchases, output_dir, report_dir):
     (report_dir / "rfm_summary.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
     rfm.unpersist()
     return report
+
+
+def check_rfm(spark, purchases, output_dir, report_dir):
+    """Calculate RFM independently for three customers using their clean lines."""
+    saved = spark.read.parquet(str(output_dir / "customer_rfm.parquet"))
+    candidates = (
+        saved.orderBy(F.desc("frequency_orders"), "customer_id").select("customer_id").take(1)
+        + saved.filter("frequency_orders = 1").orderBy("customer_id").select("customer_id").take(1)
+        + purchases.filter("row_status = 'repaired_6_fields'").orderBy("source_record").select("customer_id").take(1)
+        + saved.orderBy("customer_id").select("customer_id").take(3)
+    )
+    customer_ids = list(dict.fromkeys(row.customer_id for row in candidates))[:3]
+    summary = json.loads((report_dir / "rfm_summary.json").read_text(encoding="utf-8"))
+    reference_date = date.fromisoformat(summary["reference_date"])
+    purchase_lines = purchases.filter(F.col("customer_id").isin(customer_ids)).select(
+        "customer_id", "order_id", F.to_date("event_time").alias("purchase_date"), "price"
+    ).collect()
+
+    results = []
+    for row in saved.filter(F.col("customer_id").isin(customer_ids)).orderBy("customer_id").collect():
+        lines = [line for line in purchase_lines if line.customer_id == row.customer_id]
+        recency = (reference_date - max(line.purchase_date for line in lines)).days
+        frequency = len({line.order_id for line in lines})
+        monetary = sum(line.price for line in lines)
+        results.append({
+            "customer_id": row.customer_id,
+            "manual_R": recency, "saved_R": row.recency_days,
+            "manual_F": frequency, "saved_F": row.frequency_orders,
+            "manual_M": str(monetary), "saved_M": str(row.monetary_value),
+            "matched": (recency, frequency, monetary) == (row.recency_days, row.frequency_orders, row.monetary_value),
+        })
+
+    with (report_dir / "rfm_hand_check.csv").open("w", encoding="utf-8-sig", newline="") as stream:
+        writer = csv.DictWriter(stream, fieldnames=list(results[0]))
+        writer.writeheader()
+        writer.writerows(results)
+    if not all(row["matched"] for row in results):
+        raise ValueError("An independent RFM calculation does not match the saved result.")
+    return results

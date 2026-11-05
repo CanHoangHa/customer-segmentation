@@ -4,8 +4,8 @@
 
 Phân khúc khách có mã định danh trong dữ liệu mua hàng điện tử năm 2020.
 Kết quả chỉ mô tả phần khách đủ dữ liệu, không đại diện cho mọi người mua của cửa hàng.
-Khảo sát trên dòng đủ 8 trường và dòng ngắn khớp mẫu cho khoảng ngày 05/01–21/11/2020;
-ngày chốt là 22/11/2020, UTC. Nếu đổi phạm vi, tính và lưu lại ngày chốt.
+Giao dịch hợp lệ nằm trong khoảng 05/01–21/11/2020. Ngày chốt là 22/11/2020 theo UTC.
+Nếu đổi phạm vi, tính và lưu lại ngày chốt.
 
 ## Quy tắc làm sạch
 
@@ -24,15 +24,15 @@ ngày chốt là 22/11/2020, UTC. Nếu đổi phạm vi, tính và lưu lại n
 
 ## Mẫu quan sát trước khi sửa
 
-Notebook hiển thị ví dụ thật, đánh số vị trí từ 1 đến 6, rồi kiểm tra toàn bộ dòng ngắn.
-Mẫu chấp nhận: vị trí 4 trống, vị trí 5 là số thập phân, vị trí 6 là mã dạng số hoặc trống.
+Notebook khảo sát hiển thị mẫu gốc theo thứ tự các trường.
+Bước làm sạch chỉ sửa dòng có vị trí 4 trống, vị trí 5 là số và vị trí 6 là mã dạng số hoặc trống.
 
 Giữ ba giá trị đầu; đặt hai giá trị cuối về `price` và `user_id`;
 để `category_id`, `category_code`, `brand` trống. Không tự điền mã khách còn thiếu.
-Dòng sửa được đánh dấu `repaired_6_fields` khi khảo sát để đếm riêng ảnh hưởng của quy tắc.
+Dòng sửa được đánh dấu `repaired_6_fields` để đếm riêng ảnh hưởng của quy tắc.
 
-Xem ví dụ trước–sau ở mục 2 của notebook và `reports/short_rows_before.csv`,
-`reports/short_rows_after.csv`. Đây là sửa theo mẫu quan sát, chưa phải đối soát giao dịch với cửa hàng.
+Xem mẫu gốc trong `notebooks/data_audit.ipynb` và mẫu đã sửa trong `notebooks/cleaning_rfm.ipynb`.
+Quy tắc sửa dựa trên mẫu quan sát trong file.
 Khi làm mô hình, cần so sánh kết quả có/không có các dòng đã sửa.
 
 ## KPI
