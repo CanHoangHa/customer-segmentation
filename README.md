@@ -17,7 +17,23 @@ $env:JAVA_HOME = "C:\Program Files\Java\jdk-17"
 
 1. Chạy `jupyter lab`, mở `notebooks/data_audit.ipynb` và chọn **Run All** để xem vài bản ghi gốc, đếm số trường trên toàn file, rồi xem mẫu dòng ngắn, dữ liệu thiếu và khoảng ngày.
 2. Chạy `python scripts/run_pipeline.py` hoặc mở `notebooks/cleaning_rfm.ipynb` để căn cột, làm sạch và tính RFM. Hai cách tạo cùng đầu ra.
-3. Chạy `python -m pytest -q` để kiểm tra ba trường hợp chính.
+3. Chạy `python -m pytest -q` để kiểm tra pipeline dữ liệu, hợp đồng RFM và baseline phân khúc.
+
+## Chuẩn bị đặc trưng và baseline phân khúc
+
+Sau khi có `data/processed/customer_rfm.parquet`, chạy:
+
+```powershell
+python scripts/run_segmentation.py --expected-rows 234359
+```
+
+Lệnh này kiểm tra hợp đồng RFM, sắp xếp khách theo `customer_id`, tạo ma trận đặc trưng
+`log1p + StandardScaler` dùng chung cho các mô hình và ghi baseline ngưỡng RFM vào
+`data/curated/customer_segments.parquet`. Metadata đặc trưng và thống kê baseline nằm trong
+`reports/feature_metadata.json` và `reports/baseline_summary.json`.
+
+Pipeline dừng với lỗi rõ ràng nếu thiếu cột, null, trùng khách, R/F không nguyên hợp lệ,
+M không dương hoặc timestamp không đọc được. Không sửa trực tiếp bảng RFM bàn giao.
 
 Hai notebook dùng chung bộ đọc CSV theo từng bản ghi trong Spark để giữ đúng số trường. Khảo sát tạo báo cáo quan sát. Pipeline giữ nguyên file nguồn, thay các đầu ra mỗi lần chạy và ghi giao dịch bị tách kèm lý do.
 PySpark xử lý dữ liệu và tính RFM. PyArrow ghi Parquet trên Windows khi máy thiếu Hadoop native.
