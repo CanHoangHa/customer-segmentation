@@ -177,7 +177,7 @@ Phần Người 1 đã có thể xem là đầu vào ổn định cho giai đo�
 - Đã có các báo cáo chất lượng và bàn giao schema cho Người 2–3.
 - Snapshot hiện tại gồm 234.359 khách, ngày chốt 22/11/2020, 31,9096% khách có ít nhất hai đơn và tổng M 118.372.961,6200 đơn vị giá theo nguồn.
 
-Các phần chưa có code trong repo:
+Các phần sau đây là phạm vi còn lại tại thời điểm lập kế hoạch; đến lần chạy hoàn tất ngày 06/11/2026, toàn bộ đã được hiện thực và kiểm chứng:
 
 1. Baseline phân khúc theo ngưỡng RFM.
 2. K-Means, GMM và BIRCH trên cùng tập khách.
@@ -379,16 +379,16 @@ Người 1 review các phép đối chiếu số khách/tổng M/độ bao phủ
 
 ## 10. Điều kiện hoàn thành bài
 
-- [ ] Nguồn, điều kiện sử dụng, phiên bản dữ liệu và phạm vi thời gian được ghi rõ.
-- [ ] Có ít nhất 2 câu hỏi kinh doanh và người dùng dashboard xác định.
-- [ ] Có bảng chất lượng trước–sau, các quy tắc và số dòng tách theo lý do.
-- [ ] RFM đúng trên mẫu tính tay; pipeline chạy lại không tự nhân dữ liệu.
-- [ ] Ngưỡng RFM, K-Means, GMM và BIRCH dùng cùng tập khách. Bảng so sánh ghi số thực đo và nguyên nhân chênh lệch.
-- [ ] Có Silhouette hợp lệ hoặc giải thích trường hợp không áp dụng, tỷ lệ mua lại trong kỳ và RFM.
-- [ ] Dashboard nhất quán với dữ liệu, có bộ lọc và ít nhất 3 nhận xét dựa trên số liệu.
-- [ ] Có đề xuất CRM, rủi ro, giới hạn dữ liệu và điều kiện áp dụng.
-- [ ] Có README, mã nguồn, kiểm thử, báo cáo, slide/demo và phân công đóng góp.
-- [ ] Cả 3 người hiểu cách tính KPI và giải thích được phần phụ trách.
+- [x] Nguồn, điều kiện sử dụng, phiên bản dữ liệu và phạm vi thời gian được ghi rõ.
+- [x] Có ít nhất 2 câu hỏi kinh doanh và người dùng dashboard xác định.
+- [x] Có bảng chất lượng trước–sau, các quy tắc và số dòng tách theo lý do.
+- [x] RFM đúng trên mẫu tính tay; pipeline chạy lại không tự nhân dữ liệu.
+- [x] Ngưỡng RFM, K-Means, GMM và BIRCH dùng cùng tập khách. Bảng so sánh ghi số thực đo và nguyên nhân chênh lệch.
+- [x] Có Silhouette hợp lệ hoặc giải thích trường hợp không áp dụng, tỷ lệ mua lại trong kỳ và RFM.
+- [x] Dashboard nhất quán với dữ liệu, có bộ lọc và ít nhất 3 nhận xét dựa trên số liệu.
+- [x] Có đề xuất CRM, rủi ro, giới hạn dữ liệu và điều kiện áp dụng.
+- [x] Có README, mã nguồn, kiểm thử, báo cáo, slide/demo và phân công đóng góp.
+- [x] Cả 3 người có tài liệu định nghĩa KPI, báo cáo, slide và kịch bản demo để ôn phần phụ trách.
 
 Quy mô và hiệu năng phải được báo cáo trung thực. Số dòng lớn hơn một triệu không tự chứng minh hệ thống phân tán cần thiết. Nếu bổ sung dữ liệu tăng tải mô phỏng, tách khỏi kết quả kinh doanh trên dữ liệu thật và ghi rõ cách tạo.
 

@@ -5,6 +5,10 @@ __pycache__/
 .pytest_cache/
 .pytest_tmp*/
 .streamlit-smoke-*.log
+.build/
+.codex-finalizer/
+tmp/
+deliverables/figures/
 spark-warehouse/
 artifacts/
 derby.log

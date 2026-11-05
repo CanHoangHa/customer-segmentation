@@ -1,6 +1,6 @@
-# customer-segmentation
+# Customer Segmentation
 
-Phân khúc khách hàng cửa hàng điện tử bằng RFM và K-Means. Dữ liệu giao dịch năm 2020 do REES46 công bố.
+Phân khúc khách hàng cửa hàng điện tử bằng RFM, K-Means, Gaussian Mixture và BIRCH. Dữ liệu giao dịch năm 2020 do REES46 công bố.
 
 ## Chuẩn bị
 
@@ -52,6 +52,21 @@ streamlit run app/app.py
 Dashboard đọc artifact đã lưu, có bộ lọc phương pháp/phân khúc, hồ sơ RFM, bảng so sánh và giả
 thuyết CRM. Xem chi tiết tại `docs/dashboard.md`.
 
+## Kết quả và sản phẩm nộp
+
+- `docs/results.md`: số liệu thực nghiệm, lựa chọn mô hình, bốn giả thuyết CRM và giới hạn.
+- `docs/architecture.md`: sơ đồ pipeline và ranh giới trách nhiệm giữa các module.
+- `docs/demo.md`: kịch bản demo 8 phút và câu hỏi thường gặp.
+- `deliverables/Customer_Segmentation_Report.docx` và `.pdf`: báo cáo hoàn chỉnh.
+- `deliverables/Customer_Segmentation_Presentation.pptx`: slide thuyết trình.
+- `deliverables/README.md`: trạng thái kiểm tra và SHA-256 của ba file nộp.
+
+Kết quả chính dùng 234.359 khách. K-Means k = 3 là góc nhìn vận hành mặc định; BIRCH có
+Silhouette cao hơn nhưng cụm nhỏ nhất chỉ chiếm 0,095%, nên không đạt ngưỡng 1% đã chốt.
+
+Mã tạo báo cáo nằm ở `scripts/build_report.py`; mã tạo slide editable nằm ở
+`scripts/build_presentation.mjs`. Hai file đầu ra đã được render và kiểm tra trực quan trước khi commit.
+
 Hai notebook dùng chung bộ đọc CSV theo từng bản ghi trong Spark để giữ đúng số trường. Khảo sát tạo báo cáo quan sát. Pipeline giữ nguyên file nguồn, thay các đầu ra mỗi lần chạy và ghi giao dịch bị tách kèm lý do.
 PySpark xử lý dữ liệu và tính RFM. PyArrow ghi Parquet trên Windows khi máy thiếu Hadoop native.
 
@@ -59,3 +74,4 @@ PySpark xử lý dữ liệu và tính RFM. PyArrow ghi Parquet trên Windows kh
 - `docs/data_source.md` mô tả nguồn và các trường.
 - `docs/data_rules.md` ghi quy tắc làm sạch và công thức KPI.
 - `docs/person1_handoff.md` ghi kết quả, tên bảng và schema bàn giao.
+- `docs/modeling.md` ghi thiết kế thí nghiệm và tiêu chí chọn cấu hình.
