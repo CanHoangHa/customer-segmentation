@@ -9,6 +9,8 @@ from pathlib import Path
 import platform
 import subprocess
 import sys
+from statistics import median
+from time import perf_counter
 from typing import Any
 
 import numpy as np
@@ -147,7 +149,15 @@ def run_segmentation_pipeline(
 
     rfm = load_rfm(source, expected_rows=expected_rows)
     feature_set = prepare_features(rfm)
-    baseline = assign_rfm_baseline(feature_set.customers)
+    if benchmark_repeats < 1:
+        raise ValueError("Benchmark repeats must be at least one.")
+    if warmup:
+        assign_rfm_baseline(feature_set.customers)
+    baseline_times = []
+    for _ in range(benchmark_repeats):
+        started = perf_counter()
+        baseline = assign_rfm_baseline(feature_set.customers)
+        baseline_times.append(perf_counter() - started)
     sample_indices = fixed_sample_indices(
         len(feature_set.customers), max_size=silhouette_sample_size, seed=seed
     )
@@ -167,8 +177,8 @@ def run_segmentation_pipeline(
                 feature_set.transformed, baseline_labels, sample_indices
             ),
             "silhouette_sample_size": len(sample_indices),
-            "fit_seconds_runs": "[]",
-            "median_fit_seconds": 0.0,
+            "fit_seconds_runs": json.dumps(baseline_times),
+            "median_fit_seconds": median(baseline_times),
             "model_metrics": comparison_parameters({"populated_segments": len(baseline_uniques)}),
             "status": "ok",
             "error": "",

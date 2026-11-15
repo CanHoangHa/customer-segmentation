@@ -567,7 +567,9 @@ def build_report() -> Path:
                 row["config_id"],
                 row["actual_clusters"],
                 f"{float(row['silhouette']):.4f}".replace(".", ","),
-                "Không áp dụng" if row["method"] == "rfm_threshold" else f"{float(row['median_fit_seconds']):.3f} s".replace(".", ","),
+                f"{float(row['median_fit_seconds']):.3f} s".replace(".", ",")
+                if json.loads(row["fit_seconds_runs"])
+                else "Chưa đo",
                 f"{float(row['smallest_segment_pct']) * 100:.3f}%".replace(".", ","),
                 "Có" if row["eligible_for_selection"].lower() == "true" else "Không, fallback",
             ]

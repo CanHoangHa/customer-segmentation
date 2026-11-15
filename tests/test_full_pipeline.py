@@ -60,6 +60,10 @@ def test_full_pipeline_writes_selected_models_and_reconciled_profiles(tmp_path) 
     assert not segments[["customer_id", "method"]].duplicated().any()
     assert set(profiles["method"]) == set(summary["methods"])
     assert comparison["selected"].sum() == 4
+    baseline = comparison.loc[comparison["method"] == "rfm_threshold"].iloc[0]
+    baseline_times = json.loads(baseline["fit_seconds_runs"])
+    assert len(baseline_times) == 1
+    assert baseline["median_fit_seconds"] > 0
     assert set(selection["selected"]) == set(summary["methods"])
     assert metadata["rows"] == 90
     assert metadata["reference_date"] == "2020-11-22"

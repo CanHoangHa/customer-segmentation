@@ -16,7 +16,9 @@ giải thích. Ma trận mô hình dùng `log1p` cho R, F, M rồi chuẩn hóa 
 
 ## Cách đo
 
-Mỗi cấu hình làm nóng một lần rồi đo `fit_predict` ít nhất ba lần. Thời gian báo cáo là trung vị.
+Trên cùng máy, làm nóng mỗi cấu hình một lần rồi đo ba lần theo mặc định.
+Baseline đo từ lúc tính điểm theo ngưỡng đến khi gán nhãn. Ba thuật toán đo `fit_predict`.
+Thời gian báo cáo là trung vị, tách khỏi đọc Parquet, chuẩn hóa và tính Silhouette.
 Silhouette dùng cùng không gian đặc trưng và cùng mẫu cố định tối đa 5.000 khách. Pipeline lưu seed,
 cỡ mẫu và hash của chỉ số mẫu. Silhouette chỉ đo mức tách cụm, không phải độ chính xác có nhãn.
 
@@ -40,3 +42,10 @@ lệ mua lặp trong kỳ. Tổng khách và tổng M của từng phương phá
 - `reports/segment_profiles.csv`: hồ sơ dùng trực tiếp cho dashboard.
 - `reports/model_selection.json`: tiêu chí chọn và ánh xạ nhãn ổn định.
 - `reports/run_metadata.json`: input hash, commit, môi trường, seed và metadata feature.
+
+## Chạy lại và kiểm tra kết quả
+
+1. Trong môi trường đã cài `requirements.txt`, kiểm tra có `data/processed/customer_rfm.parquet`.
+2. Chạy `python scripts/run_segmentation.py --expected-rows 234359` từ thư mục dự án. Lệnh đo cả bốn phương pháp trên máy hiện tại và ghi lại các bảng kết quả.
+3. Mở `notebooks/segmentation.ipynb`, chọn kernel từ cùng môi trường rồi chạy **Run All** để xem đầu vào, bước chuẩn hóa và kết quả vừa lưu.
+4. Đối chiếu bốn hàng được chọn trong `reports/model_comparison.csv`. Kiểm tra baseline có đủ ba lần đo và dùng trung vị mới khi cập nhật báo cáo, slide.

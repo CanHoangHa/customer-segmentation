@@ -40,6 +40,9 @@ metadata lần chạy nằm trong `reports/`.
 Để chỉ kiểm tra hợp đồng và baseline, thêm `--baseline-only`. Tham số benchmark có thể xem bằng
 `python scripts/run_segmentation.py --help`.
 
+Mở `notebooks/segmentation.ipynb` để xem từng bước và kết quả đã lưu.
+Xem cách chạy lại và cập nhật bảng so sánh trong [hướng dẫn phân khúc](docs/modeling.md).
+
 Pipeline dừng với lỗi rõ ràng nếu thiếu cột, null, trùng khách, R/F không nguyên hợp lệ,
 M không dương hoặc timestamp không đọc được. Không sửa trực tiếp bảng RFM bàn giao.
 
