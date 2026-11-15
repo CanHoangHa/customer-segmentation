@@ -1,6 +1,6 @@
 {
-  "generated_at_utc": "2026-11-05T17:27:17.008506+00:00",
-  "git_commit": "860e4554840f83c4867ce54dc1fc497a7284e816",
+  "generated_at_utc": "2026-11-15T08:33:34.111063+00:00",
+  "git_commit": "bd570d76c8978df50159a92496672454e2e13b62",
   "input_file": "customer_rfm.parquet",
   "input_sha256": "9fb70f8213c306fd613585ae162ad8a5bff6fe421d4354caced60abfdeefaebc",
   "rows": 234359,
@@ -44,12 +44,12 @@
     "constant_features": []
   },
   "environment": {
-    "python": "3.12.14",
+    "python": "3.13.0",
     "platform": "Windows-11-10.0.26300-SP0",
     "cpu_count": 12,
-    "numpy": "2.5.4",
+    "numpy": "2.5.1",
     "pandas": "2.3.3",
-    "pyarrow": "26.0.1",
-    "scikit_learn": "1.9.1"
+    "pyarrow": "25.0.1",
+    "scikit_learn": "1.9.0"
   }
 }
