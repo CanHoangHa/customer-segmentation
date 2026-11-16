@@ -1,0 +1,32 @@
+{
+  "rows": 234359,
+  "customer_order": "customer_id ascending",
+  "feature_order": [
+    "recency_days",
+    "frequency_orders",
+    "monetary_value"
+  ],
+  "transform": "log1p",
+  "scaler": "StandardScaler",
+  "raw_min": {
+    "recency_days": 1.0,
+    "frequency_orders": 1.0,
+    "monetary_value": 0.02
+  },
+  "raw_max": {
+    "recency_days": 322.0,
+    "frequency_orders": 178.0,
+    "monetary_value": 68035.6
+  },
+  "logged_mean": {
+    "recency_days": 4.135019770115631,
+    "frequency_orders": 0.9041041142238067,
+    "monetary_value": 5.194804179795452
+  },
+  "logged_scale": {
+    "recency_days": 1.0474867614529666,
+    "frequency_orders": 0.3731105902706789,
+    "monetary_value": 1.5808549310582134
+  },
+  "constant_features": []
+}
