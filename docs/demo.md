@@ -13,8 +13,8 @@
 2. **Dữ liệu và RFM, 75 giây.** Trình bày 600.784 dòng sạch, 234.359 khách, ngày chốt 22/11/2020 và công thức R/F/M.
 3. **Pipeline, 60 giây.** Đi theo sơ đồ từ CSV đến Parquet, RFM, bốn phương pháp, artifact và dashboard.
 4. **So sánh mô hình, 90 giây.** Chọn tab so sánh, giải thích mẫu Silhouette 5.000 khách và thời gian fit. Chỉ ra BIRCH có Silhouette cao nhưng cụm nhỏ nhất chỉ 0,095%.
-5. **Hồ sơ K-Means, 90 giây.** Chọn K-Means và lần lượt xem S1, S2, S3. Đối chiếu quy mô, median R/F/M, tỷ trọng M và tỷ lệ mua lặp.
-6. **Giả thuyết CRM, 90 giây.** Trình bày thử nghiệm duy trì S1, tái tương tác S2 và onboarding đơn thứ hai cho S3. Nhấn mạnh cần nhóm đối chứng.
+5. **Hồ sơ K-Means, 90 giây.** Trong tab Phân khúc khách hàng, chọn K-Means và xem S1, S2, S3. Đối chiếu hai biểu đồ tỷ trọng với RFM trung vị và tỷ lệ mua lặp trong bảng.
+6. **Giả thuyết CRM, 90 giây.** Mở Đề xuất chăm sóc khách hàng. Trình bày thử nghiệm duy trì S1, tái tương tác S2 và onboarding đơn thứ hai cho S3. Nhấn mạnh cần nhóm đối chứng.
 7. **Giới hạn và kết luận, 30 giây.** Nhắc coverage, đồng tiền chưa xác minh, Silhouette không phải hiệu quả kinh doanh và phân khúc không chứng minh nhân quả.
 
 ## Câu hỏi thường gặp

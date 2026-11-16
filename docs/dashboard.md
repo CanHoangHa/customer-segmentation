@@ -13,10 +13,9 @@ không đổi RFM và không đổi ngày chốt.
 
 ## Nội dung
 
-- Phạm vi dữ liệu hiển thị số khách, tỷ lệ mua lặp trong kỳ, tổng M và độ bao phủ dòng hợp lệ.
-- Hồ sơ phân khúc hiển thị quy mô, tỷ trọng M, median R/F/M và scatter trên mẫu cố định.
-- So sánh phương pháp hiển thị Silhouette, thời gian chạy, số cụm và quy mô cụm nhỏ nhất.
-- Giả thuyết CRM nối quan sát định lượng với thử nghiệm, KPI theo dõi và rủi ro.
+- Phân khúc khách hàng có bộ chọn phương pháp, hai biểu đồ donut về tỷ trọng khách và tỷ trọng giá trị mua, cùng bảng đặc điểm từng nhóm. Mở rộng mục chi tiết để xem biểu đồ RFM, hoặc mục chăm sóc để xem đề xuất thử nghiệm.
+- So sánh mô hình hiển thị Silhouette, thời gian chạy, số cụm và quy mô cụm nhỏ nhất cho cả bốn phương pháp.
+- Phạm vi dữ liệu hiển thị số khách, số đơn, tỷ lệ mua lặp trong kỳ, tổng M và độ bao phủ dòng hợp lệ.
 
 Silhouette không phải độ chính xác và không chứng minh hiệu quả kinh doanh. Dashboard cảnh báo khi
 mô hình được chọn theo fallback vì không có cấu hình đạt ngưỡng quy mô cụm tối thiểu 1%.

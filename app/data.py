@@ -126,9 +126,11 @@ def crm_hypotheses(profiles: pd.DataFrame, method: str) -> pd.DataFrame:
             kpi = "Tỷ lệ tương tác và mua lại so với nhóm đối chứng"
             risk = "Phân khúc có thể gộp nhiều hành vi khác nhau"
         observation = (
-            f"{row.customer_pct:.1f}% khách, {row.monetary_share_pct:.1f}% tổng M, "
-            f"median R/F/M = {row.median_recency_days:.0f}/"
-            f"{row.median_frequency_orders:.0f}/{row.median_monetary_value:,.2f}"
+            f"Nhóm chiếm {row.customer_pct:.2f}% số khách và "
+            f"{row.monetary_share_pct:.2f}% tổng giá trị mua. "
+            f"Khách điển hình có {row.median_frequency_orders:g} đơn, "
+            f"lần mua cuối cách ngày chốt {row.median_recency_days:g} ngày. "
+            f"Tỷ lệ khách có từ 2 đơn trong nhóm là {row.repeat_customer_pct:.2f}%."
         )
         records.append(
             {
