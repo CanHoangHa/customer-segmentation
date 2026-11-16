@@ -8,7 +8,7 @@ __pycache__/
 .build/
 .codex-finalizer/
 tmp/
-deliverables/figures/
+/deliverables/
 spark-warehouse/
 artifacts/
 derby.log
