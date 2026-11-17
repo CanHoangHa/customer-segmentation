@@ -12,12 +12,14 @@ Tất cả phương pháp dùng cùng 234.359 khách hàng. K-Means, GMM và BIR
 
 ## So sánh phương pháp được chọn
 
-| Phương pháp | Cấu hình | Số nhóm | Silhouette | Trung vị thời gian fit | Nhóm nhỏ nhất | Nhận xét |
+| Phương pháp | Cấu hình | Số nhóm | Silhouette | Thời gian chạy (giây, trung vị) | Nhóm nhỏ nhất | Nhận xét |
 |---|---:|---:|---:|---:|---:|---|
-| Ngưỡng RFM | 5 nhóm | 5 | 0,1969 | Không áp dụng | 12,84% | Dễ đặt tên và giải thích bằng quy tắc |
-| K-Means | k = 3 | 3 | 0,3470 | 0,774 giây | 21,47% | Cân bằng giữa độ tách, tốc độ và quy mô nhóm |
-| GMM | k = 3 | 3 | 0,1919 | 3,534 giây | 14,52% | Tách rõ khách mua một lần và khách mua lặp |
-| BIRCH | k = 3, threshold = 0,7 | 3 | 0,4862 | 2,567 giây | 0,095% | Silhouette cao nhưng phân bố quá lệch; đây là fallback |
+| Ngưỡng RFM | 5 nhóm | 5 | 0,1969 | 0,308 | 12,84% | Dễ đặt tên và giải thích bằng quy tắc |
+| K-Means | k = 3 | 3 | 0,3470 | 0,780 | 21,47% | Cân bằng giữa độ tách, tốc độ và quy mô nhóm |
+| GMM | k = 3 | 3 | 0,1919 | 3,403 | 14,52% | Tách rõ khách mua một lần và khách mua lặp |
+| BIRCH | k = 3, threshold = 0,7 | 3 | 0,4862 | 2,372 | 0,095% | Silhouette cao nhưng phân bố quá lệch; đây là fallback |
+
+Thời gian là trung vị của ba lần đo. Phép đo tính thời gian chấm điểm và gán nhóm cho baseline, hoặc huấn luyện và gán nhóm cho K-Means, GMM và BIRCH.
 
 BIRCH đạt Silhouette cao nhất nhưng 97,42% khách nằm trong một cụm và cụm nhỏ nhất chỉ có 223 khách. Kết quả này không đạt điều kiện tối thiểu 1%, nên không phù hợp làm phân khúc CRM chính. K-Means k = 3 được đề xuất làm góc nhìn vận hành mặc định vì ba nhóm đều đủ lớn, thời gian fit thấp nhất trong các mô hình học máy được chọn và Silhouette cao hơn baseline cùng GMM. Baseline RFM vẫn hữu ích khi cần một quy tắc minh bạch để chọn đối tượng chiến dịch.
 
